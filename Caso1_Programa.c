@@ -7,6 +7,8 @@
 #define CIFRAR 1
 #define DESCIFRAR 0
 
+// Andrés Huertas - 202420560
+// Andrés Javier Sanabria Garzón -  202411507
 
 
 /* ---------------------------------------
