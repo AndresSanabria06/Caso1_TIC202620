@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Constantes definidas para el tamaño del buffer y los modos de operación
 #define TAM_BUFFER 2048
-
 #define CIFRAR 1
 #define DESCIFRAR 0
 
@@ -131,10 +131,14 @@ int procesarArchivo(const char *archivoEntrada,
 --------------------------------------- */
 int main(int argc, char *argv[]) {
 
+    // Punteros para almacenar los argumentos de la línea de comandos
     char *operacion;
     char *archivoEntrada;
     char *archivoSalida;
     char *claveTexto;
+
+    /* Variables para almacenar la clave, su tamaño, el modo de operación 
+    y el número de bytes procesados  */
 
     unsigned char *clave;
     int tamClave;
@@ -148,11 +152,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // Asignación de los argumentos a las variables correspondientes
     operacion = argv[1];
     archivoEntrada = argv[2];
     archivoSalida = argv[3];
     claveTexto = argv[4];
 
+    // Determinación del modo de operación según el argumento proporcionado
     if (strcmp(operacion, "cifrar") == 0) {
         modo = CIFRAR;
     } else if (strcmp(operacion, "descifrar") == 0) {
@@ -162,18 +168,33 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+
+    // Convierte la variable claveTexto a un puntero
+    // tipo unsigned char y lo guarda en la variable clave.
     clave = (unsigned char *) claveTexto;
     tamClave = 0;
 
+    // aumentar el tamaño del caracter mientras
+    // no se encuentre en la clave del texto el caracter nulo '\0'
     while (claveTexto[tamClave] != '\0') {
         tamClave++;
     }
 
+
+    // Varificar si la clave esta vacia
+    // en dado caso, terminar programa 
     if (tamClave == 0) {
         printf("Clave vacia\n");
         return 1;
     }
 
+
+    // Ingresar a la función procesarArchivo con los parámetros correspondientes
+    // archivoEntrada: Nombre de archivo que se va a cifrar o decifrar
+    // archivoSalida: Nombre de archivo que debe imprimir 
+    // clave: Puntero a la clave que se va a utilizar para cifrar o descifrar
+    // tamClave: Tamaño de la clave
+    // modo: Modo de operación
     procesados = procesarArchivo(
         archivoEntrada,
         archivoSalida,
