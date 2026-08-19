@@ -100,8 +100,16 @@ int procesarArchivo(const char *archivoEntrada,
         return -1;
     }
 
+    /*
+    buffer: puntero al destino de bloque de memoria donde se almacenarán los datos leídos del archivo de entrada.
+    1: tamaño de cada elemento a leer (en bytes)
+    TAM_BUFFER: número máximo de elementos a leer (en este caso, el tamaño del buffer).
+    in: puntero al archivo de entrada desde el cual se leerán los datos.
+    */
+    
     leidos = fread(buffer, 1, TAM_BUFFER, in);
 
+    // Ciclo para procesar cada elemento del archivo y cifrarlo o descifrarlo según el modo especificado
     while (leidos > 0) {
 
         indiceClave = transformarBytesClave(
