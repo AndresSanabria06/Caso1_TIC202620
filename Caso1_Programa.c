@@ -31,6 +31,106 @@ int  ajustarRangoByte(int valor) {
 /* ---------------------------------------
    Rutina principal a traducir. Parámetros por pila
 --------------------------------------- */
+
+__declspec(naked) int transformarBytesClave(unsigned char *buffer,
+                         int longitud,
+                         unsigned char *clave,
+                         int tamClave,
+                         int indiceClave,
+                         int modo) {
+    /*
+        TO DO: Escriba en este comentario cómo se encuentra la pila
+    */
+    __asm {
+        /*
+            TO DO:  Traduzca a ASM usando la pila y direccionamiento basado en EBP.
+                    Además, defina el prólogo y el epílogo.
+
+            Se tienen 6 parametros y 4 variables locales
+
+            LOCALES:
+             int i; [ebp-4]
+             int valorByte; [epb-8]
+             int valorClave; [ebp-12]
+             int temp; [ebp-16]
+
+            Direccion de retorno [ebp+4]
+            ebp del llamador [ebp+0]
+
+            PARAMETROS:
+            unsigned char *buffer [ebp+8]
+            int longitud [ebp+12]
+            unsigned char *clave [ebp+16]
+            int tamClave [ebp+20]
+            int indiceClave [ebp+24]
+            int modo [ebp+28]
+
+
+
+        */
+
+        ; modo de proceder: no usar registros 
+        ; para variables que no sean cambiadas
+        ; en el transcurso de la funcion, estas
+        ; vendrian siendo:
+        ; - int modo = [ebp+28]
+        ; - int tamClave [ebp+20]
+        ; - int longitud [ebp+12]
+
+        ; Las variables que podran ir cambiando
+        ; con el pasar del programa son las siguientes
+        ; - int i = [ebp-4]
+        ; - int valorByte = [ebp-8]
+        ; - int valorClave = [ebp-12]
+        ; - int temp = [ebp-16] 
+        ; - unsigned char *buffer = [epb+8]
+        ; - unsigned char *clave = [ebp+16]
+        ; - int indiceClave = [ebp+24]
+
+        CIFRRAR EQU 1
+
+        push ebp
+        mov ebp, esp
+        sub esp, 16
+
+        mov dword ptr[ebp-4], 0
+        
+        InicioFor:
+            mov esi, dword ptr[ebp-4] ; registro esi tiene contador
+            cmp esi, dword ptr[ebp+12] ; i >= longitud
+            jge finLoop:
+
+            mov ebx, [ebp+8] ; ebx = buffer
+            mov eax, [ebx + esi] ; eax = buffer[i]
+            mov [ebp-8], eax ; valorByte = buffer[i] 
+            mov ebx, [ebp-8]
+            
+            mov edx, [ebp+24] ; edx = indiceClave
+            mov ebx, [ebp+16] ; ebx = clave
+            mov eax, [ebx + edx]; eax = clave[indiceClave]
+            mov [ebp-12], eax
+            mov eax, [ebp-12]
+
+            cmp [ebp+28], CIFRAR
+            jne noEsIgual
+            noEsIgual:
+                add eax, ebx
+                mov [ebp-16], eax
+                jmp finIf
+            esIgual:
+                sub eax, ebx
+                mov [ebp-16], eax
+                jmp finIf
+
+            finIf:
+                
+
+        finLoop:
+        
+    }
+}
+
+
 int transformarBytesClave(unsigned char *buffer,
                          int longitud,
                          unsigned char *clave,
