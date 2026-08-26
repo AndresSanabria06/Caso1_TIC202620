@@ -10,6 +10,29 @@
 // Andrés Huertas - 202420560
 // Andrés Javier Sanabria Garzón -  202411507
 
+__declspec(naked) int ajustarRangoByte(int valor) {
+    
+    __asm {
+        mov eax, [esp + 4]
+
+        cmp eax, 255
+        jle minimo
+        mov eax, 255
+        jmp fin
+
+        minimo:
+            cmp eax, 0 
+            jge fin
+            mov eax, 0
+
+        fin:
+            ret
+    }
+
+    }
+              
+
+
 
 /* ---------------------------------------
    Subrutina: ajustarRangoByte a traducir. Parámetros por registro
@@ -69,16 +92,12 @@ __declspec(naked) int transformarBytesClave(unsigned char *buffer,
 
         */
 
-        ; modo de proceder: no usar registros 
-        ; para variables que no sean cambiadas
-        ; en el transcurso de la funcion, estas
-        ; vendrian siendo:
+        ; Variables que no cambian
         ; - int modo = [ebp+28]
         ; - int tamClave [ebp+20]
         ; - int longitud [ebp+12]
 
-        ; Las variables que podran ir cambiando
-        ; con el pasar del programa son las siguientes
+        ; Variables que cambian
         ; - int i = [ebp-4]
         ; - int valorByte = [ebp-8]
         ; - int valorClave = [ebp-12]
@@ -87,48 +106,78 @@ __declspec(naked) int transformarBytesClave(unsigned char *buffer,
         ; - unsigned char *clave = [ebp+16]
         ; - int indiceClave = [ebp+24]
 
-        CIFRRAR EQU 1
-
         push ebp
         mov ebp, esp
         sub esp, 16
 
+        push ebx
+        push esi
+        push edi 
+
         mov dword ptr[ebp-4], 0
         
         InicioFor:
-            mov esi, dword ptr[ebp-4] ; registro esi tiene contador
-            cmp esi, dword ptr[ebp+12] ; i >= longitud
-            jge finLoop:
+            mov esi, dword ptr[ebp - 4] ; registro esi tiene contador
+            cmp esi, dword ptr[ebp + 12] ; i >= longitud
+            jge finLoop
 
-            mov ebx, [ebp+8] ; ebx = buffer
-            mov eax, [ebx + esi] ; eax = buffer[i]
-            mov [ebp-8], eax ; valorByte = buffer[i] 
-            mov ebx, [ebp-8]
+            mov ecx, [ebp + 8] ; ecx = buffer
+            movzx eax, byte ptr [ecx + esi] ; eax = buffer[i]
+            mov [ebp - 8], eax ; valorByte = buffer[i]
+
             
-            mov edx, [ebp+24] ; edx = indiceClave
-            mov ebx, [ebp+16] ; ebx = clave
-            mov eax, [ebx + edx]; eax = clave[indiceClave]
-            mov [ebp-12], eax
-            mov eax, [ebp-12]
+            mov ebx, [ebp + 24] ; ebx = indiceClave
 
-            cmp [ebp+28], CIFRAR
-            jne noEsIgual
-            noEsIgual:
-                add eax, ebx
-                mov [ebp-16], eax
-                jmp finIf
-            esIgual:
-                sub eax, ebx
-                mov [ebp-16], eax
-                jmp finIf
+            mov ecx, [ebp + 16] ; ecx = clave
+            movzx edx, byte ptr [ecx + ebx]  ; eax = clave[indiceClave]
+            mov [ebp - 12], edx ; valorClave = clave[indiceClave]
+
+            cmp dword ptr [ebp + 28], CIFRAR
+            jne noIgual
+                add eax, edx
+                mov [ebp - 16], eax
+                jmp finIf    
+            noIgual:
+                sub eax, edx
+                mov [ebp - 16], eax
 
             finIf:
-                
+            mov ecx, [ebp - 16]
+            push ecx
+            call ajustarRangoByte
+            add esp, 4
+
+            mov ecx, [ebp + 8]
+            mov esi, dword ptr [ebp - 4]
+            mov byte ptr [ecx + esi], al
+
+            inc dword ptr [ebp + 24]
+
+            inc dword ptr [ebp - 4]
+
+            mov edi, [ebp + 20]
+            cmp dword ptr [ebp - 4], edi
+            jne noEsIgual
+
+            noEsIgual:
+                mov dword ptr [ebp + 24], 0
+                jmp InicioFor
+
+
+            jmp InicioFor
 
         finLoop:
+            pop edi
+            pop esi 
+            pop ebx
+            
+            mov esp, ebp
+            pop epb
+            ret
         
     }
 }
+
 
 
 int transformarBytesClave(unsigned char *buffer,
