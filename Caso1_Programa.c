@@ -10,26 +10,26 @@
 // Andrés Huertas - 202420560
 // Andrés Javier Sanabria Garzón -  202411507
 
-__declspec(naked) int ajustarRangoByte(int valor) {
-    
+ __declspec(naked) int  ajustarRangoByte(int valor) {
+
     __asm {
         mov eax, [esp + 4]
 
         cmp eax, 255
         jle minimo
-        mov eax, 255
+        sub eax, 256
         jmp fin
 
         minimo:
             cmp eax, 0 
             jge fin
-            mov eax, 0
+            add eax, 256
+            jmp fin
 
         fin:
             ret
     }
-
-    }
+}
               
 
 
@@ -61,121 +61,65 @@ __declspec(naked) int transformarBytesClave(unsigned char *buffer,
                          int tamClave,
                          int indiceClave,
                          int modo) {
-    /*
-        TO DO: Escriba en este comentario cómo se encuentra la pila
-    */
     __asm {
-        /*
-            TO DO:  Traduzca a ASM usando la pila y direccionamiento basado en EBP.
-                    Además, defina el prólogo y el epílogo.
-
-            Se tienen 6 parametros y 4 variables locales
-
-            LOCALES:
-             int i; [ebp-4]
-             int valorByte; [epb-8]
-             int valorClave; [ebp-12]
-             int temp; [ebp-16]
-
-            Direccion de retorno [ebp+4]
-            ebp del llamador [ebp+0]
-
-            PARAMETROS:
-            unsigned char *buffer [ebp+8]
-            int longitud [ebp+12]
-            unsigned char *clave [ebp+16]
-            int tamClave [ebp+20]
-            int indiceClave [ebp+24]
-            int modo [ebp+28]
-
-
-
-        */
-
-        ; Variables que no cambian
-        ; - int modo = [ebp+28]
-        ; - int tamClave [ebp+20]
-        ; - int longitud [ebp+12]
-
-        ; Variables que cambian
-        ; - int i = [ebp-4]
-        ; - int valorByte = [ebp-8]
-        ; - int valorClave = [ebp-12]
-        ; - int temp = [ebp-16] 
-        ; - unsigned char *buffer = [epb+8]
-        ; - unsigned char *clave = [ebp+16]
-        ; - int indiceClave = [ebp+24]
-
         push ebp
         mov ebp, esp
-        sub esp, 16
+        sub esp, 16 //espacio para variables i, valorByte, etc.
 
         push ebx
         push esi
-        push edi 
+        push edi
 
-        mov dword ptr[ebp-4], 0
-        
-        InicioFor:
-            mov esi, dword ptr[ebp - 4] ; registro esi tiene contador
-            cmp esi, dword ptr[ebp + 12] ; i >= longitud
-            jge finLoop
-
-            mov ecx, [ebp + 8] ; ecx = buffer
-            movzx eax, byte ptr [ecx + esi] ; eax = buffer[i]
-            mov [ebp - 8], eax ; valorByte = buffer[i]
-
+        mov dword ptr[ebp-4], 0 //ebp-4 = i
+        For:
+            mov esi, [ebp-4] //mueve el valor de i a esi
+            cmp esi, [ebp+12] //ebp+12 = longitud
+            jge FinFor //si i es mayor o igual a longitud, fin
             
-            mov ebx, [ebp + 24] ; ebx = indiceClave
+            mov ecx, [ebp+8] //ecx = buffer
+            mov eax, [ecx+esi] //eax = buffer[i]
+            mov [ebp-8], eax //valorByte = buffer[i]
 
-            mov ecx, [ebp + 16] ; ecx = clave
-            movzx edx, byte ptr [ecx + ebx]  ; eax = clave[indiceClave]
-            mov [ebp - 12], edx ; valorClave = clave[indiceClave]
+            mov ebx, [ebp+24] //ebx = indiceClave
+            mov ecx, [ebp+16] //ecx = clave
+            mov edx, [ecx+ebx] //edx = clave[indiceClave]
+            mov [ebp-12], edx //valorClave = “ “ “ 
+            
+            cmp dword ptr[ebp+28], 1
+            jne Else
+                add eax, edx //valorByte + valorClave
+                mov [ebp-16], eax // temp = valorByte + valorClave
+                jmp FinIf
+            Else:
+                sub eax, edx //temp = valorByte – valorClave
+                mov [ebp-16], eax
 
-            cmp dword ptr [ebp + 28], CIFRAR
-            jne noIgual
-                add eax, edx
-                mov [ebp - 16], eax
-                jmp finIf    
-            noIgual:
-                sub eax, edx
-                mov [ebp - 16], eax
-
-            finIf:
-            mov ecx, [ebp - 16]
+            FinIf:
+            mov ecx, [ebp-16] //ecx = temp
             push ecx
-            call ajustarRangoByte
+            call ajustarRangoByte //call = ajustarRangoByte(temp)
             add esp, 4
+            mov ecx, [ebp+8] //ecx = buffer
+            mov [ecx+esi], al //al es temp ya que es un char
 
-            mov ecx, [ebp + 8]
-            mov esi, dword ptr [ebp - 4]
-            mov byte ptr [ecx + esi], al
-
-            inc dword ptr [ebp + 24]
-
-            inc dword ptr [ebp - 4]
-
-            mov edi, [ebp + 20]
-            cmp dword ptr [ebp - 4], edi
-            jne noEsIgual
-
-            noEsIgual:
-                mov dword ptr [ebp + 24], 0
-                jmp InicioFor
-
-
-            jmp InicioFor
-
-        finLoop:
-            pop edi
-            pop esi 
-            pop ebx
+            inc dword ptr[ebp+24]
+            inc dword ptr[ebp-4]
             
-            mov esp, ebp
-            pop epb
+            mov edi, [ebp+20] //edi = tamClave
+            cmp [ebp+24], edi //compara índiceClave con tamClave
+            jne For
+            mov dword ptr[ebp+24], 0 //indiceClave = 0
+            jmp For
+
+        FinFor:
+                pop edi
+                pop esi 
+                pop ebx
+                    
+                mov esp, ebp
+                pop ebp
             ret
-        
-    }
+        }
 }
 
 
