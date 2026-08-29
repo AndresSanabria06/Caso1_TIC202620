@@ -10,6 +10,21 @@
 // Andrés Huertas - 202420560
 // Andrés Javier Sanabria Garzón -  202411507
 
+//README
+/*
+1. Para compilar el programa, se debe utilizar el siguiente comando en la terminal:
+clang -m32 -masm=intel -fms-extensions -O0 -fno-pic -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -fno-stack-protector Caso1_Programa.c -o vigenere
+
+2. Luego para correr el programa el comando sigue una estructura de la siguiente manera:
+./vigenere {cifrar|descifrar} <archivo_entrada> <archivo_salida> <clave>
+Al probar para cifrar y luego descifrar, asegurese de usar la misma clave.
+*/
+
+
+/* ---------------------------------------
+   Subrutina: ajustarRangoByte a traducir. Parámetros por registro
+--------------------------------------- */
+
  __declspec(naked) int  ajustarRangoByte(int valor) {
 
     __asm {
@@ -32,11 +47,10 @@
 }
               
 
-
-
 /* ---------------------------------------
-   Subrutina: ajustarRangoByte a traducir. Parámetros por registro
+   Código original de la subrutina
 --------------------------------------- */
+/*
 int  ajustarRangoByte(int valor) {
 
     if (valor > 255) {
@@ -49,6 +63,7 @@ int  ajustarRangoByte(int valor) {
 
     return valor;
 }
+*/
 
 
 /* ---------------------------------------
@@ -122,8 +137,10 @@ __declspec(naked) int transformarBytesClave(unsigned char *buffer,
         }
 }
 
-
-
+/* ---------------------------------------
+   Código original de la rutina principal
+--------------------------------------- */
+/*
 int transformarBytesClave(unsigned char *buffer,
                          int longitud,
                          unsigned char *clave,
@@ -147,7 +164,6 @@ int transformarBytesClave(unsigned char *buffer,
             temp = valorByte - valorClave;
         }
 
-        /* llamada a subrutina */
         temp = ajustarRangoByte(temp);
 
         buffer[i] = (unsigned char) temp;
@@ -161,6 +177,7 @@ int transformarBytesClave(unsigned char *buffer,
 
     return indiceClave;
 }
+*/
 
 /* ---------------------------------------
    Procesamiento del archivo
